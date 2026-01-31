@@ -1,6 +1,7 @@
+/** Controlador de reportes: ventas detalladas y totales por producto. */
 const pool = require('../config/db');
 
-// Reporte detallado de ventas
+/** Reporte detallado de ventas. */
 exports.getSales = (req, res) => {
   const { from, to } = req.query;
   const params = [];
@@ -32,7 +33,7 @@ exports.getSales = (req, res) => {
   });
 };
 
-// Reporte de ingresos (unidades vendidas) por producto
+/** Reporte de ingresos (unidades vendidas) por producto. */
 exports.getProductIncome = (req, res) => {
   const { from, to } = req.query;
   const params = [];

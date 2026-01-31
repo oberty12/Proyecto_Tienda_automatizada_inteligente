@@ -1,6 +1,7 @@
+/** Controlador de usuarios: registro, login (con rol), listado y cambio de rol. */
 const pool = require('../config/db');
 
-// Registrar un usuario (incluye rol, por defecto vendedor)
+/** Registrar un usuario (incluye rol, por defecto vendedor). */
 exports.registerUser = (req, res) => {
   if (!req.body) {
     return res.status(400).send('Cuerpo de peticion vacio');
@@ -24,7 +25,7 @@ exports.registerUser = (req, res) => {
   );
 };
 
-// Login de usuario (retorna rol)
+/** Login de usuario (retorna rol). */
 exports.loginUser = (req, res) => {
   if (!req.body) {
     return res.status(400).send('Cuerpo de peticion vacio');
@@ -58,7 +59,7 @@ exports.loginUser = (req, res) => {
   );
 };
 
-// Listar usuarios
+/** Listar usuarios. */
 exports.getUsers = (req, res) => {
   pool.query('SELECT ID_USUARIO, NOMBRE, APELLIDO, TELEFONO, ROLE FROM T_USUARIOS ORDER BY ID_USUARIO ASC', (err, result) => {
     if (err) {
@@ -72,7 +73,7 @@ exports.getUsers = (req, res) => {
   });
 };
 
-// Actualizar rol
+/** Actualizar rol de un usuario. */
 exports.updateUserRole = (req, res) => {
   const { id } = req.params;
   const { role } = req.body || {};

@@ -1,6 +1,7 @@
+/** Controlador de productos: alta y consulta de productos. */
 const pool = require('../config/db');
 
-// Registrar un nuevo producto (incluye cantidad y agregado_por si existen columnas)
+/** Registrar un nuevo producto (incluye cantidad y agregado_por si existen columnas). */
 exports.registerProduct = (req, res) => {
   const { producto, cantidad, agregado_por } = req.body || {};
 
@@ -34,7 +35,7 @@ exports.registerProduct = (req, res) => {
   });
 };
 
-// Obtener todos los productos
+/** Obtener todos los productos. */
 exports.getAllProducts = (req, res) => {
   pool.query('SELECT * FROM T_PRODUCTOS', (err, result) => {
     if (err) {
