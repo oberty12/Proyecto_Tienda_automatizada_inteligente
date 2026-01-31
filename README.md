@@ -1,0 +1,1 @@
+# Proyecto_Tienda_automatizada_inteligente
