@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes | Plataforma Avanzada</title>
+  <link rel="stylesheet" href="/css/reportes.css">
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <div class="breadcrumbs">
+        <a href="/menu" class="crumb">⌂ Inicio</a>
+        <span class="crumb current">Reportes</span>
+      </div>
+      <a class="back" href="/menu">Volver</a>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Reportes de ventas</p>
+            <h1 class="panel-title">Detalle y analitica</h1>
+          </div>
+          <div class="filters">
+            <label>Desde <input type="date" id="sales-from" class="input small"></label>
+            <label>Hasta <input type="date" id="sales-to" class="input small"></label>
+            <button id="sales-run" class="ghost-btn">Generar</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Venta</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Notas</th>
+              </tr>
+            </thead>
+            <tbody id="sales-body">
+              <tr><td colspan="6">Ejecuta el reporte para ver datos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel form-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Ingresos por producto</p>
+            <h2 class="panel-title">Totales vendidos</h2>
+          </div>
+          <div class="filters">
+            <label>Desde <input type="date" id="income-from" class="input small"></label>
+            <label>Hasta <input type="date" id="income-to" class="input small"></label>
+            <button id="income-run" class="ghost-btn">Generar</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Producto</th>
+                <th>Producto</th>
+                <th>Total unidades</th>
+                <th>Ventas</th>
+              </tr>
+            </thead>
+            <tbody id="income-body">
+              <tr><td colspan="4">Ejecuta el reporte para ver datos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Nota: se calcula con el total de unidades vendidas (no hay columna de precio en la BD).</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const salesBody = document.getElementById('sales-body');
+    const incomeBody = document.getElementById('income-body');
+    const salesRun = document.getElementById('sales-run');
+    const incomeRun = document.getElementById('income-run');
+
+    async function runSalesReport() {
+      salesBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
+      const from = document.getElementById('sales-from').value;
+      const to = document.getElementById('sales-to').value;
+      const qs = new URLSearchParams();
+      if (from) qs.append('from', from);
+      if (to) qs.append('to', to);
+      try {
+        const res = await fetch('/api/reports/sales' + (qs.toString() ? '?' + qs.toString() : ''));
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!data.length) {
+          salesBody.innerHTML = '<tr><td colspan="6">Sin datos en el rango.</td></tr>';
+          return;
+        }
+        salesBody.innerHTML = data.map(v => `
+          <tr>
+            <td>${v.id_venta || ''}</td>
+            <td>${v.producto || v.id_producto || ''}</td>
+            <td>${v.cantidad || 0}</td>
+            <td>${v.cliente || ''}</td>
+            <td>${v.fecha_venta ? new Date(v.fecha_venta).toLocaleString() : ''}</td>
+            <td>${v.notas || ''}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        salesBody.innerHTML = '<tr><td colspan="6">Error al cargar el reporte.</td></tr>';
+      }
+    }
+
+    async function runIncomeReport() {
+      incomeBody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+      const from = document.getElementById('income-from').value;
+      const to = document.getElementById('income-to').value;
+      const qs = new URLSearchParams();
+      if (from) qs.append('from', from);
+      if (to) qs.append('to', to);
+      try {
+        const res = await fetch('/api/reports/products' + (qs.toString() ? '?' + qs.toString() : ''));
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!data.length) {
+          incomeBody.innerHTML = '<tr><td colspan="4">Sin datos en el rango.</td></tr>';
+          return;
+        }
+        incomeBody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.id_producto || ''}</td>
+            <td>${p.producto || ''}</td>
+            <td>${p.total_unidades || 0}</td>
+            <td>${p.total_ventas || 0}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        incomeBody.innerHTML = '<tr><td colspan="4">Error al cargar el reporte.</td></tr>';
+      }
+    }
+
+    salesRun.addEventListener('click', runSalesReport);
+    incomeRun.addEventListener('click', runIncomeReport);
+  </script>
+</body>
+</html>

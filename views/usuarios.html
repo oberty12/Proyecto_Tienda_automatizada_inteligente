@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion de Usuarios</title>
+  <link rel="stylesheet" href="/css/usuarios.css">
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <div class="breadcrumbs">
+        <a href="/menu" class="crumb">⌂ Inicio</a>
+        <span class="crumb current">Usuarios</span>
+      </div>
+      <a class="back" href="/menu">Volver</a>
+    </header>
+
+    <main class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Solo administrador</p>
+          <h1 class="panel-title">Gestionar roles de usuarios</h1>
+        </div>
+        <button id="refresh" class="ghost-btn">Actualizar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Telefono</th>
+              <th>Rol</th>
+              <th>Accion</th>
+            </tr>
+          </thead>
+          <tbody id="users-body">
+            <tr><td colspan="6">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="status" class="status"></p>
+    </main>
+  </div>
+
+  <script>
+    const usersBody = document.getElementById('users-body');
+    const statusEl = document.getElementById('status');
+    const refreshBtn = document.getElementById('refresh');
+
+    function renderRow(user) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${user.id_usuario}</td>
+        <td>${user.nombre || ''}</td>
+        <td>${user.apellido || ''}</td>
+        <td>${user.telefono || ''}</td>
+        <td>
+          <select class="input role-select">
+            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrador</option>
+            <option value="gerente" ${user.role === 'gerente' ? 'selected' : ''}>Gerente</option>
+            <option value="vendedor" ${user.role === 'vendedor' ? 'selected' : ''}>Vendedor</option>
+          </select>
+        </td>
+        <td><button class="small-btn">Guardar</button></td>
+      `;
+      const btn = tr.querySelector('.small-btn');
+      const select = tr.querySelector('.role-select');
+      btn.addEventListener('click', async () => {
+        statusEl.textContent = 'Guardando...';
+        const res = await fetch('/api/users/' + user.id_usuario + '/role', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: select.value })
+        });
+        const txt = await res.text();
+        if (res.ok) {
+          statusEl.textContent = 'Rol actualizado';
+          statusEl.className = 'status success';
+        } else {
+          statusEl.textContent = txt || 'Error al actualizar';
+          statusEl.className = 'status error';
+        }
+      });
+      return tr;
+    }
+
+    async function loadUsers() {
+      statusEl.textContent = '';
+      usersBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
+      try {
+        const res = await fetch('/api/users');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!data.length) {
+          usersBody.innerHTML = '<tr><td colspan="6">Sin usuarios.</td></tr>';
+          return;
+        }
+        usersBody.innerHTML = '';
+        data.forEach(u => usersBody.appendChild(renderRow(u)));
+      } catch (err) {
+        usersBody.innerHTML = '<tr><td colspan="6">Error al cargar usuarios.</td></tr>';
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadUsers);
+    loadUsers();
+  </script>
+</body>
+</html>

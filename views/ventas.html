@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Ventas</title>
+  <link rel="stylesheet" href="/css/ventas.css">
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <div class="breadcrumbs">
+        <a href="/menu" class="crumb">⌂ Inicio</a>
+        <span class="crumb current">Gestión de Ventas</span>
+      </div>
+      <a class="back" href="/menu">Volver</a>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Catálogo</p>
+            <h1 class="panel-title">Productos disponibles</h1>
+          </div>
+          <button id="refresh-products" class="ghost-btn">Actualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Producto</th>
+              </tr>
+            </thead>
+            <tbody id="products-body">
+              <tr><td colspan="2">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel form-panel">
+        <div>
+          <p class="eyebrow">Registrar venta</p>
+          <h2 class="panel-title">Nueva venta</h2>
+        </div>
+        <form id="sale-form" class="form">
+          <label class="label" for="producto">Producto</label>
+          <select class="input" id="producto" name="producto_id" required>
+            <option value="">Selecciona un producto</option>
+          </select>
+
+          <label class="label" for="cantidad">Cantidad</label>
+          <input class="input" type="number" id="cantidad" name="cantidad" min="1" step="1" required placeholder="Ej: 5">
+
+          <label class="label" for="cliente">Cliente</label>
+          <input class="input" type="text" id="cliente" name="cliente" placeholder="Nombre del cliente" required>
+
+          <label class="label" for="notas">Notas</label>
+          <textarea class="input" id="notas" name="notas" rows="3" placeholder="Comentarios adicionales"></textarea>
+
+          <button class="button" type="submit">Registrar venta</button>
+          <p id="sale-message" class="message" role="status"></p>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const productsBody = document.getElementById('products-body');
+    const productSelect = document.getElementById('producto');
+    const refreshBtn = document.getElementById('refresh-products');
+    const saleForm = document.getElementById('sale-form');
+    const saleMessage = document.getElementById('sale-message');
+
+    async function loadProducts() {
+      productsBody.innerHTML = '<tr><td colspan="2">Cargando...</td></tr>';
+      productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
+      try {
+        const res = await fetch('/api/products');
+        if (!res.ok) throw new Error('No se pudo cargar productos');
+        const data = await res.json();
+        if (!data.length) {
+          productsBody.innerHTML = '<tr><td colspan="2">No hay productos registrados.</td></tr>';
+          return;
+        }
+        productsBody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.id_producto || p.id || ''}</td>
+            <td>${p.producto || p.product || p.nombre || ''}</td>
+          </tr>
+        `).join('');
+        productSelect.insertAdjacentHTML('beforeend', data.map(p => `
+          <option value="${p.id_producto || p.id || ''}">
+            ${p.producto || p.product || p.nombre || 'Producto'}
+          </option>
+        `).join(''));
+      } catch (err) {
+        productsBody.innerHTML = '<tr><td colspan="2">Error cargando productos.</td></tr>';
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadProducts);
+
+    saleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      saleMessage.textContent = 'Guardando...';
+      const formData = new URLSearchParams(new FormData(saleForm));
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+      });
+      const text = await res.text();
+      if (res.ok) {
+        saleMessage.textContent = text || 'Venta registrada';
+        saleMessage.className = 'message success';
+        saleForm.reset();
+        productSelect.innerHTML = '<option value="">Selecciona un producto</option>';
+        loadProducts();
+      } else {
+        saleMessage.textContent = text || 'Error al registrar la venta';
+        saleMessage.className = 'message error';
+      }
+    });
+
+    loadProducts();
+  </script>
+</body>
+</html>

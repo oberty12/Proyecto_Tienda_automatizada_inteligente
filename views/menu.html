@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Principal | Plataforma Avanzada</title>
+  <link rel="stylesheet" href="/css/menu.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">
+          <span class="gear"></span>
+          <span class="bars"></span>
+          <span class="arrow"></span>
+        </div>
+        <div class="brand-text">
+          <p class="brand-name">Plataforma Avanzada</p>
+          <p class="brand-tagline">Gestion Comercial y Automatizacion Inteligente</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <span id="role-pill" class="nav-link pill"></span>
+        <a href="/" id="logout" class="nav-link">Cerrar Sesion</a>
+        <button class="nav-menu">Menu</button>
+      </nav>
+    </header>
+
+    <main class="content">
+      <div class="breadcrumb">
+        <span class="home-icon">⌂</span>
+        <span>Inicio</span>
+      </div>
+
+      <h1 class="title">Menu Principal</h1>
+
+      <section class="cards">
+        <a class="card link-card role-vendedor role-admin role-gerente" href="/ventas" data-role="ventas">
+          <div class="card-icon sales"></div>
+          <div>
+            <h2 class="card-title">Gestion de Ventas</h2>
+            <p class="card-text">Gestiona las ventas y el seguimiento de pedidos.</p>
+          </div>
+        </a>
+
+        <a class="card inventory link-card role-vendedor role-admin" href="/inventarios" data-role="inventarios">
+          <div class="card-icon inventory-icon"></div>
+          <div>
+            <h2 class="card-title">Gestion de Inventarios</h2>
+            <p class="card-text">Administra los niveles de inventario y stock.</p>
+          </div>
+        </a>
+
+        <a class="card reports link-card role-gerente role-admin" href="/reportes" data-role="reportes">
+          <div class="card-icon reports-icon"></div>
+          <div>
+            <h2 class="card-title">Generar Reportes</h2>
+            <p class="card-text">Genera reportes detallados y analiticos.</p>
+          </div>
+        </a>
+
+        <a class="card link-card role-admin" href="/usuarios" data-role="usuarios">
+          <div class="card-icon users-icon"></div>
+          <div>
+            <h2 class="card-title">Gestionar Usuarios</h2>
+            <p class="card-text">Cambia roles y gestiona accesos.</p>
+          </div>
+        </a>
+      </section>
+
+      <div class="actions">
+        <a href="/" class="button" id="back-home">Volver al Inicio</a>
+      </div>
+    </main>
+
+    <div class="waves">
+      <div class="wave wave1"></div>
+      <div class="wave wave2"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const rawRole = localStorage.getItem('userRole') || 'vendedor';
+      const role = rawRole.toString().trim().toLowerCase();
+      const normalized = (role === 'admin' || role === 'administrador' || role === 'adm' || role === 'admi' || role.startsWith('adm')) ? 'admin'
+        : (role === 'gerente') ? 'gerente'
+        : 'vendedor';
+
+      const rolePill = document.getElementById('role-pill');
+      rolePill.textContent = 'Rol: ' + normalized.toUpperCase();
+
+      const cards = document.querySelectorAll('.card.link-card');
+      cards.forEach(card => {
+        if (card.classList.contains('role-' + normalized)) {
+          card.style.display = 'grid';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      const clearSession = () => {
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('username');
+      };
+
+      document.getElementById('logout').addEventListener('click', clearSession);
+      document.getElementById('back-home').addEventListener('click', clearSession);
+    }());
+  </script>
+</body>
+</html>

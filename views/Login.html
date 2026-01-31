@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma Avanzada | Acceso</title>
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="brand">
+        <div class="logo-mark">
+          <span class="bar bar-one"></span>
+          <span class="bar bar-two"></span>
+          <span class="bar bar-three"></span>
+          <span class="arrow"></span>
+        </div>
+        <div class="brand-text">
+          <p class="brand-name">Plataforma Avanzada</p>
+          <p class="brand-tagline">Gestion Comercial y Automatizacion</p>
+        </div>
+      </div>
+
+      <h1 class="title">Iniciar Sesion</h1>
+
+      <form id="login-form" class="form" action="/api/users/login" method="POST">
+        <label class="label" for="login-username">Correo electronico</label>
+        <input class="input" type="text" id="login-username" name="username" placeholder="Correo electronico" required>
+
+        <label class="label" for="login-password">Contrasena</label>
+        <input class="input" type="password" id="login-password" name="password" placeholder="********" required>
+
+        <button class="button" type="submit">Ingresar</button>
+
+        <p class="helper">No tienes una cuenta? <a href="#" id="show-register">Crear nueva cuenta</a></p>
+      </form>
+
+      <form id="register-form" class="form is-hidden" action="/api/users/register" method="POST">
+        <label class="label" for="reg-username">Correo electronico</label>
+        <input class="input" type="text" id="reg-username" name="username" placeholder="Correo electronico" required>
+
+        <label class="label" for="reg-password">Contrasena</label>
+        <input class="input" type="password" id="reg-password" name="password" placeholder="********" required>
+
+        <label class="label" for="reg-nombre">Nombre</label>
+        <input class="input" type="text" id="reg-nombre" name="nombre" placeholder="Tu nombre" required>
+
+        <label class="label" for="reg-apellido">Apellido</label>
+        <input class="input" type="text" id="reg-apellido" name="apellido" placeholder="Tu apellido" required>
+
+        <label class="label" for="reg-telefono">Telefono</label>
+        <input class="input" type="tel" id="reg-telefono" name="telefono" placeholder="123456789" required>
+
+        <button class="button" type="submit">Crear cuenta</button>
+
+        <p class="helper">Ya tienes cuenta? <a href="#" id="show-login">Volver a iniciar sesion</a></p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const showRegister = document.getElementById('show-register');
+      const showLogin = document.getElementById('show-login');
+
+      showRegister.addEventListener('click', function (e) {
+        e.preventDefault();
+        loginForm.classList.add('is-hidden');
+        registerForm.classList.remove('is-hidden');
+      });
+
+      showLogin.addEventListener('click', function (e) {
+        e.preventDefault();
+        registerForm.classList.add('is-hidden');
+        loginForm.classList.remove('is-hidden');
+      });
+
+      // Login: prevenir submit por defecto para redirigir al menu en exito
+      loginForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const data = new URLSearchParams(new FormData(loginForm));
+        const res = await fetch(loginForm.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: data.toString()
+        });
+        if (res.ok) {
+          const payload = await res.json();
+          if (payload && payload.role) {
+            const raw = String(payload.role).trim().toLowerCase();
+            const normalized = (raw === 'admin' || raw === 'administrador' || raw === 'adm' || raw === 'admi' || raw.startsWith('adm')) ? 'admin'
+              : (raw === 'gerente') ? 'gerente'
+              : 'vendedor';
+            localStorage.setItem('userRole', normalized);
+            localStorage.setItem('username', payload.username || '');
+          }
+          window.location.href = '/menu';
+        } else {
+          const msg = await res.text();
+          alert(msg || 'Error al iniciar sesion');
+        }
+      });
+    }());
+  </script>
+</body>
+</html>

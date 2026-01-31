@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Inventarios</title>
+  <link rel="stylesheet" href="/css/inventarios.css">
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <div class="breadcrumbs">
+        <a href="/menu" class="crumb">⌂ Inicio</a>
+        <span class="crumb current">Gestión de Inventarios</span>
+      </div>
+      <a class="back" href="/menu">Volver</a>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Inventario</p>
+            <h1 class="panel-title">Productos registrados</h1>
+          </div>
+          <button id="refresh-products" class="ghost-btn">Actualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Agregado por</th>
+              </tr>
+            </thead>
+            <tbody id="products-body">
+              <tr><td colspan="4">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel form-panel">
+        <div>
+          <p class="eyebrow">Nuevo producto</p>
+          <h2 class="panel-title">Agregar al inventario</h2>
+        </div>
+        <form id="product-form" class="form">
+          <label class="label" for="producto">Producto</label>
+          <input class="input" type="text" id="producto" name="producto" placeholder="Nombre del producto" required>
+
+          <label class="label" for="cantidad">Cantidad</label>
+          <input class="input" type="number" id="cantidad" name="cantidad" min="0" step="1" placeholder="Ej: 50" required>
+
+          <label class="label" for="agregado_por">Agregado por</label>
+          <input class="input" type="text" id="agregado_por" name="agregado_por" placeholder="Nombre de quien registra" required>
+
+          <button class="button" type="submit">Guardar producto</button>
+          <p id="product-message" class="message" role="status"></p>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const productsBody = document.getElementById('products-body');
+    const refreshBtn = document.getElementById('refresh-products');
+    const productForm = document.getElementById('product-form');
+    const productMessage = document.getElementById('product-message');
+
+    async function loadProducts() {
+      productsBody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+      try {
+        const res = await fetch('/api/products');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!data.length) {
+          productsBody.innerHTML = '<tr><td colspan="4">No hay productos registrados.</td></tr>';
+          return;
+        }
+        productsBody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.id_producto || p.id || ''}</td>
+            <td>${p.producto || p.product || p.nombre || ''}</td>
+            <td>${p.cantidad || p.stock || 0}</td>
+            <td>${p.agregado_por || p.creado_por || ''}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        productsBody.innerHTML = '<tr><td colspan="4">Error al cargar productos.</td></tr>';
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadProducts);
+
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      productMessage.textContent = 'Guardando...';
+      const formData = new URLSearchParams(new FormData(productForm));
+      const res = await fetch('/api/products/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+      });
+      const text = await res.text();
+      if (res.ok) {
+        productMessage.textContent = text || 'Producto registrado';
+        productMessage.className = 'message success';
+        productForm.reset();
+        loadProducts();
+      } else {
+        productMessage.textContent = text || 'Error al registrar producto';
+        productMessage.className = 'message error';
+      }
+    });
+
+    loadProducts();
+  </script>
+</body>
+</html>
